@@ -147,8 +147,8 @@ def ip_on_binary_rep(binary_representation):
 
     return ip_result_str
 
-def key_in_binary_conv():
-    original_key = 'abcd1234'
+def key_in_binary_conv(key):
+    original_key = key
     binary_representation_key = ''
 
     for char in original_key:
@@ -158,9 +158,9 @@ def key_in_binary_conv():
 
     return binary_representation_key
 
-def generate_round_keys():
+def generate_round_keys(key):
 
-    binary_representation_key = key_in_binary_conv()
+    binary_representation_key = key_in_binary_conv(key)
     pc1_key_str = ''.join(binary_representation_key[bit - 1] for bit in pc1_table)
 
     c0 = pc1_key_str[:28]
@@ -178,9 +178,9 @@ def generate_round_keys():
 
     return round_keys
 
-def encryption(user_input):
+def encryption(user_input, key):
     binary_rep_of_input = str_to_bin(user_input)
-    round_keys = generate_round_keys()
+    round_keys = generate_round_keys(key)
 
     ip_result_str = ip_on_binary_rep(binary_rep_of_input)
 
@@ -243,8 +243,8 @@ def encryption(user_input):
 
     return final_cipher_ascii
 
-def decryption(final_cipher):
-    round_keys = generate_round_keys()
+def decryption(final_cipher, key):
+    round_keys = generate_round_keys(key)
 
     ip_dec_result_str = ip_on_binary_rep(final_cipher)
 
@@ -305,19 +305,19 @@ def segment_text(text):
 
     return segments
 
-def encryption_dynamic(user_input):
+def encryption_dynamic(user_input, key):
     segments = segment_text(user_input)
     encrypted_segments = []
 
     for segment in segments:
-        encrypted_segment = encryption(segment)
+        encrypted_segment = encryption(segment, key)
         encrypted_segments.append(encrypted_segment)
 
     final_encrypted = ''.join(encrypted_segments).encode('utf-8')
     # print("Encrypted Text: ", final_encrypted, type(final_encrypted))
     return final_encrypted
 
-def decryption_dynamic(encrypted_text):
+def decryption_dynamic(encrypted_text, key):
     encrypted_text = encrypted_text.decode('utf-8')
 
     segments = segment_text(encrypted_text)
@@ -325,7 +325,7 @@ def decryption_dynamic(encrypted_text):
 
     for segment in segments:
         binary_segment = str_to_bin(segment)
-        decrypted_segment = decryption(binary_segment)
+        decrypted_segment = decryption(binary_segment, key)
 
         decrypted_segment = decrypted_segment.rstrip('\0')
         decrypted_segments.append(decrypted_segment)
