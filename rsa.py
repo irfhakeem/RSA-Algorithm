@@ -38,12 +38,12 @@ def generate_keypair(keysize=2048):
     # Generate two large prime numbers
     p = randprime(2**(keysize//2 - 1), 2**(keysize//2))
     q = randprime(2**(keysize//2 - 1), 2**(keysize//2))
-    
+
     n = p * q
     phi = (p - 1) * (q - 1)
 
     # 2 pangkat 16 + 1
-    e = 65537  
+    e = 65537
 
     d = mod_inverse(e, phi)
     return ((e, n), (d, n))
@@ -59,13 +59,13 @@ def rsa_encrypt_des_key(des_key: str, public_key):
         e, n = public_key
         # Convert DES key to integer directly
         des_key_int = int.from_bytes(des_key.encode('utf-8'), byteorder='big')
-        
+
         if des_key_int >= n:
             raise ValueError("DES key too large for RSA key size")
-        
+
         encrypted_int = pow(des_key_int, e, n)
         return base64.b64encode(str(encrypted_int).encode('utf-8'))
-        
+
     except Exception as e:
         raise ValueError(f"Error encrypting DES key: {str(e)}")
 
@@ -74,14 +74,14 @@ def rsa_decrypt_des_key(encrypted_des_key: bytes, private_key):
         d, n = private_key
         # Decode the encrypted integer
         encrypted_int = int(base64.b64decode(encrypted_des_key).decode('utf-8'))
-        
+
         # Decrypt using RSA
         decrypted_int = pow(encrypted_int, d, n)
-        
+
         # Convert back to bytes and decode
         decrypted_bytes = decrypted_int.to_bytes((decrypted_int.bit_length() + 7) // 8, byteorder='big')
         return decrypted_bytes.decode('utf-8')
-        
+
     except Exception as e:
         raise ValueError(f"Error decrypting DES key: {str(e)}")
 
@@ -89,12 +89,12 @@ def hybrid_encrypt(message: str, des_key: str, recipient_public_key):
     try:
         # 1. Encrypt message using DES
         encrypted_message = encryption_dynamic(message, des_key)
-        
+
         # 2. Encrypt DES key using recipient's RSA public key
         encrypted_des_key = rsa_encrypt_des_key(des_key, recipient_public_key)
-        
+
         return encrypted_message, encrypted_des_key
-        
+
     except Exception as e:
         raise Exception(f"Encryption failed: {str(e)}")
 
@@ -102,11 +102,11 @@ def hybrid_decrypt(encrypted_message, encrypted_des_key: bytes, private_key):
     try:
         # 1. Decrypt DES key using RSA private key
         des_key = rsa_decrypt_des_key(encrypted_des_key, private_key)
-        
+
         # 2. Decrypt message using decrypted DES key
         decrypted_message = decryption_dynamic(encrypted_message, des_key)
-        
+
         return decrypted_message
-        
+
     except Exception as e:
         raise Exception(f"Decryption failed: {str(e)}")
