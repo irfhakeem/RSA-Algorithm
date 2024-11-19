@@ -19,11 +19,16 @@ def client_program():
         client_socket.connect((host, port))
         print("Connected to server")
 
-        client_socket.send(pickle.dumps((public_key, private_key)))
-        print("Sent public and private key to server")
+        # Kirim public key ke server
+        client_socket.send(pickle.dumps(public_key))
+        print("Sent public key to server")
 
+        # Terima public key lawan dari server
         other_client_public_key = pickle.loads(client_socket.recv(4096))
         print("Received other client's public key")
+
+        # Tampilkan private key ke layar console setelah terhubung
+        print(f"Private Key (d, n): {private_key}")
 
         message = input(" -> ")
 
