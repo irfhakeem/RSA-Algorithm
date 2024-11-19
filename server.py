@@ -21,19 +21,19 @@ def server_program():
         client_name = f"client{i+1}"
         print(f"Connection from {client_name}: {address}")
 
-        # Terima public key dari client
-        client_public_key = pickle.loads(conn.recv(4096))
-        client_keys[client_name] = client_public_key
+        # Terima public key dan private key dari client
+        client_public_key, client_private_key = pickle.loads(conn.recv(4096))
+        client_keys[client_name] = (client_public_key, client_private_key)
 
-        print(client_public_key)
-        print(f"Received public key from {client_name}")
+        print(f"Received public key from {client_name}: {client_public_key}")
+        print(f"Received private key from {client_name}: {client_private_key}")
 
         clients.append((conn, client_name))
 
     # Kirim public key client2 ke client1 dan sebaliknya
     for i, (conn, client_name) in enumerate(clients):
         other_client_name = "client2" if client_name == "client1" else "client1"
-        other_client_key = client_keys[other_client_name]
+        other_client_key = client_keys[other_client_name][0]  # Hanya kirim public key
 
         # Kirim public key lawan ke masing-masing client
         conn.send(pickle.dumps(other_client_key))
@@ -47,7 +47,7 @@ def server_program():
             try:
                 # Terima data terenkripsi dalam bentuk biner tanpa decoding
                 encrypted_data = conn.recv(4096)
-                print("recieved encrypted data: " ,encrypted_data)
+                print(f"Received encrypted data from {client_name}: {encrypted_data}")
                 if not encrypted_data:
                     continue
 
@@ -56,7 +56,6 @@ def server_program():
 
                 # Teruskan data terenkripsi ke penerima tanpa encode/decode
                 recipient_conn.send(encrypted_data)
-                print("sent encrypted data: " ,encrypted_data)
                 print(f"Forwarded encrypted message from {client_name} to {recipient_conn}")
 
             except Exception as e:
