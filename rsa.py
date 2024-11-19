@@ -1,5 +1,6 @@
 import random
 from des import encryption_dynamic, decryption_dynamic
+import base64
 
 def is_prime(num):
     if num < 2:
@@ -68,26 +69,46 @@ def rsa_encrypt_des_key(des_key: str, public_key):
     Mengenkripsi kunci DES menggunakan RSA
     :param des_key: str - kunci DES dalam bentuk string
     :param public_key: tuple (e, n) - kunci publik RSA
-    :return: int - kunci DES terenkripsi
+    :return: str - kunci DES terenkripsi dalam format base64
     """
-    e, n = public_key
-    des_key_int = int.from_bytes(des_key.encode(), byteorder='big')
-    if des_key_int >= n:
-        raise ValueError("Kunci DES terlalu besar untuk RSA key size yang diberikan")
-    return pow(des_key_int, e, n)
+    try:
+        e, n = public_key
+        # Konversi string ke bytes menggunakan ASCII
+        des_key_bytes = des_key.encode('ascii')
+        des_key_int = bytes_to_int(des_key_bytes)
 
-def rsa_decrypt_des_key(encrypted_des_key: int, private_key, key_length=64):
+        if des_key_int >= n:
+            raise ValueError("Kunci DES terlalu besar untuk RSA key size yang diberikan")
+
+        encrypted_int = pow(des_key_int, e, n)
+        encrypted_bytes = int_to_bytes(encrypted_int)
+        # Konversi ke base64 untuk penyimpanan/transmisi yang aman
+        return base64.b64encode(encrypted_bytes).decode('ascii')
+
+    except UnicodeEncodeError as e:
+        raise ValueError(f"Error encoding DES key: {str(e)}")
+
+def rsa_decrypt_des_key(encrypted_des_key: str, private_key):
     """
     Mendekripsi kunci DES yang terenkripsi
-    :param encrypted_des_key: int - kunci DES terenkripsi
+    :param encrypted_des_key: str - kunci DES terenkripsi dalam format base64
     :param private_key: tuple (d, n) - kunci private RSA
-    :param key_length: int - panjang kunci dalam bits
-    :return: str - kunci DES yang sudah didekripsi
+    :return: str - kunci DES yang sudah didekripsi (string asli)
     """
-    d, n = private_key
-    des_key_int = pow(encrypted_des_key, d, n)
-    des_key_bytes = int_to_bytes(des_key_int)
-    return des_key_bytes.decode()
+    try:
+        d, n = private_key
+        # Decode base64 kembali ke bytes
+        encrypted_bytes = base64.b64decode(encrypted_des_key.encode('ascii'))
+        encrypted_int = bytes_to_int(encrypted_bytes)
+
+        decrypted_int = pow(encrypted_int, d, n)
+        decrypted_bytes = int_to_bytes(decrypted_int)
+
+        # Decode bytes kembali ke string ASCII
+        return decrypted_bytes.decode('ascii')
+
+    except Exception as e:
+        raise ValueError(f"Error decrypting DES key: {str(e)}")
 
 def hybrid_encrypt(message: str, des_key: str, rsa_public_key):
     """
@@ -108,7 +129,7 @@ def hybrid_encrypt(message: str, des_key: str, rsa_public_key):
 
     return encrypted_message, encrypted_des_key
 
-def hybrid_decrypt(encrypted_message: str, encrypted_des_key: int, rsa_private_key):
+def hybrid_decrypt(encrypted_message: str, encrypted_des_key: str, rsa_private_key):
     """
     Mendekripsi pesan yang dienkripsi menggunakan sistem hybrid
     :param encrypted_message: str - pesan terenkripsi
@@ -118,6 +139,7 @@ def hybrid_decrypt(encrypted_message: str, encrypted_des_key: int, rsa_private_k
     """
     # Dekripsi kunci DES
     des_key = rsa_decrypt_des_key(encrypted_des_key, rsa_private_key)
+    print("des_key: ", des_key)
 
     # Dekripsi pesan menggunakan kunci DES yang sudah didekripsi
     decrypted_message = decryption_dynamic(encrypted_message, des_key)
@@ -125,3 +147,19 @@ def hybrid_decrypt(encrypted_message: str, encrypted_des_key: int, rsa_private_k
     print(encrypted_message, encrypted_des_key)
 
     return decrypted_message
+
+def __main__():
+    public_key, private_key = generate_keypair()
+    print("Public key:", public_key)
+    print("Private key:", private_key)
+
+    message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec purus ac nunc"
+    des_key = "client01"
+
+    encrypted_message, encrypted_des_key = hybrid_encrypt(message, des_key, public_key)
+    print("Encrypted message:", encrypted_message,"Encrypted DES key: ", encrypted_des_key)
+
+    decrypted_message = hybrid_decrypt(encrypted_message, encrypted_des_key, private_key)
+    print("Decrypted message:", decrypted_message)
+
+__main__()
