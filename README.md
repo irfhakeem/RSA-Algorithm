@@ -1,9 +1,9 @@
-# Chat-Encryption
+# RSA-Algorithm
 
 | Nama                  | NRP        | Task                                                                                                                                        |
 | --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Muhammad Irfan Hakim  | 5025221291 | - Mengubah Algoritma DES tugas sebelumnya agar bisa menangani input lebih dari 8 char <br> - Implementasi enkripsi dan dekripsi pada client |
-| Muhammad Nabil Fadhil | 5025221200 | - Implementasi server dan client                                                                                                            |
+| Muhammad Irfan Hakim  | 5025221291 | - Implementasi PKA dan enkripsi RSA |
+| Muhammad Nabil Fadhil | 5025221200 | - Implementasi Dekripsi RSA                                                                                                            |
 
 ## Penjelasan DES
 
